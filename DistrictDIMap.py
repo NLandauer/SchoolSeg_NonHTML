@@ -28,32 +28,31 @@ pdxmap = folium.Map(location=map_start_point,
 district_polygons = requests.get("https://raw.githubusercontent.com/NLandauer/SchoolSeg_NonHTML/main"
                                  "/cleaned_districts.geojson").json()
 
-# generate choropleth with highlight function on
+# generate choropleth
 folium.Choropleth(
     geo_data=district_polygons,
     name="choropleth",
     data=districts,
     columns=["DISINSTID", "DI"],
     key_on="feature.properties.DISTINSTID",
-    fill_color="YlGn",
-    fill_opacity=0.7,
+    fill_color="YlOrRd",
+    fill_opacity=0.9,
     line_opacity=0.2,
-    legend_name="Dissimilarity Index",
-    highlight=True
+    legend_name="Dissimilarity Index"
 ).add_to(pdxmap)
 
 # merge geojson and attribute data into a single geopandas GeoDataFrame (for tooltip)
 district_gdf = geopandas.GeoDataFrame.from_features(district_polygons, crs="EPSG:4326")
 district_merge = district_gdf.merge(districts, how="left", left_on="DISTINSTID", right_on="DISINSTID")
 
-# add tooltip to district polygons
-tooltip = folium.features.GeoJsonTooltip(fields=["District_Name","DI"],
+# add tooltip and highlight function to district polygons
+tooltip = folium.features.GeoJsonTooltip(fields=["District_Name", "DI"],
                                          aliases=["District: ", "Dissimilarity Index: "],
-                                        style="""
+                                         style="""
         border: 2px solid black;
         border-radius: 3px;
         box-shadow: 3px;
-    """,)
+    """, )
 folium.GeoJson(district_merge,
                tooltip=tooltip,
                style_function=lambda feature: {"color": "black",
@@ -61,7 +60,9 @@ folium.GeoJson(district_merge,
                                                "fillColor": None,
                                                "fill": True,
                                                "fillOpacity": 0},
-               highlight_function= lambda feat: {'fillColor': 'green'},
+               highlight_function=lambda feat: {'color': 'black',
+                                                'weight': 3,
+                                                'fill': True},
                overlay=True).add_to(pdxmap)
 
 # to display map for testing
@@ -69,6 +70,3 @@ folium.GeoJson(district_merge,
 
 # export to html file
 pdxmap.save('DistrictDIMap.html')
-
-
-
