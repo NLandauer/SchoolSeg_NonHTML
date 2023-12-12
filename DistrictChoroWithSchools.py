@@ -11,6 +11,9 @@ districts = pd.read_csv(url_districts)
 url_schools = "https://raw.githubusercontent.com/NLandauer/SchoolSeg_NonHTML/main/Elementaries.csv"
 schools = pd.read_csv(url_schools)
 
+# query schools with <10% white (for special circle markers)
+high_seg_schools = schools.query('Percent_White < .1')
+
 # define the map's center starting point
 map_start_point = [45.504297, -122.816187]
 
@@ -70,7 +73,17 @@ folium.GeoJson(district_merge,
 schools['marker_color'] = pd.cut(schools['Percent_White'], bins=6,
                                  labels=['#ffffcc', '#c7e9b4', '#7fcdbb', '#41b6c4', '#2c7fb8', '#253494'])
 
-# Add schools to map as circles with custom color and simple popups
+# add open circles for high seg schools (layer below other point markers)
+for i in range(0, len(high_seg_schools)):
+    folium.CircleMarker(
+        location=[high_seg_schools.iloc[i]['Latitude'], high_seg_schools.iloc[i]['Longitude']],
+        color='orange',
+        weight=4,
+        radius=20,
+        fill=False
+    ).add_to(pdxmap)
+
+# add schools to map as circles with custom color and simple popups
 for i in range(0, len(schools)):
     folium.CircleMarker(
         location=[schools.iloc[i]['Latitude'], schools.iloc[i]['Longitude']],
@@ -84,7 +97,7 @@ for i in range(0, len(schools)):
     ).add_to(pdxmap)
 
 
-# to display map for testing
+# display map in default browser for testing
 # pdxmap.show_in_browser()
 
 # export to html file
